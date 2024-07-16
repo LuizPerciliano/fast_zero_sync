@@ -60,4 +60,4 @@ def test_delete_user(client):
     response = client.delete('/users/1')
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {'message': 'Usuário apagado, YES!!!'}
+    assert response.json() == {'message': 'User deleted'}
