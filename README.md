@@ -219,64 +219,222 @@ git push
 [... deu muito ruim nessa parte do git, refazer outro projeto com cuidado]
 
 
-[🐍 ... VOLTAR DAQUI ...🐍]
+
 # Aula 02 Introdução ao desenvolvimento WEB
 
+## Usando o fastapi na rede local
+~~~shell
+fastapi dev fast_zero_v2/app.py --host 0.0.0.0
+~~~
+
+ou com o comando abaixo para o mesmo resultado
+~~~shell
+task run --host 0.0.0.0
+~~~
+
+Assim, você pode acessar a aplicação de outro computador na sua rede usando o endereço IP da sua máquina.
+
+Descobrindo o ip local no Windows
+~~~shell
+ipconfig
+~~~
+
+Descobrindo o seu endereço local usando python pelo interpretador
+~~~shell
+python
+~~~
+
+~~~python
+import socket
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.connect(("8.8.8.8", 80))
+s.getsockname()[0]
+~~~
+
+
+Agora basta acessar a aplicação pelo endereço: http://192.168.0.5:8000/, ficando acessível também por outras máquinas dentro dessa rede, assim como o celular.
+
+[... desenvolvendo e incrementando o projeto ...]
+
+
+Criando novo arquivo para testes e aprendizado de endpoints.
+~~~shell
+type nul > fast_zero_v2/aula_00.py
+~~~
+
+Abrir o arquivo `fast_zero_v2/aula_00.py` e copiar o script abaixo.
+~~~python
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+
+app = FastAPI()
+
+
+@app.get('/')
+def read_root():
+    return {'message': 'Olá Mundo!'}
+~~~
+
+Executar o arquivo específico.
+~~~shell
+fastapi dev fast_zero_v2/aula_00.py
+~~~
+
+## Pydantic
+~~~shell
+echo > fast_zero_v2/schemas.py
+~~~
 
 [... desenvolvendo e incrementando o projeto ...]
 
 
 # Aula 03 Estruturando o Projeto e Criando Rotas CRUD
-Instalando + ferramentas de desenvolvimento
+## Implementando endpoints
+
+### Rota do POST
+Arquivo `fast_zero_v2/app.py`.
+~~~python
+@app.post('/users/', status_code=HTTPStatus.CREATED)
+def create_user():
+    ...
+~~~
+
+### Modelo de dados
+Arquivo `fast_zero_v2/schemas.py`.
+~~~python
+class UserSchema(BaseModel):
+    username: str
+    email: str
+    password: str
+~~~
+
+[... desenvolvendo e incrementando o projeto ... estudar mais esta aula]
+
+## Validação e pydantic
+
+Validação de email
+Instalando + ferramentas de desenvolvimento 
 ~~~shell
 poetry add "pydantic[email]"
 ~~~
 
+## Criando um banco de dados falso
+
+
+### Não se repita (DRY)
+Arquivo `tests/conftest.py`.
+
+~~~shell
+echo > tests/conftest.py
+~~~
+
+## Implementando a Rota GET
+
+
+## Implementando a Rota PUT
+
+## Implementando a Rota DELETE
+
+
+
+
+
+
+
+[🐍 ... VOLTAR DAQUI ...🐍]
 
 # Aula 04 Configurando o Banco de Dados e Gerenciando Migrações com Alembic
 
-
+Instalando + ferramentas de desenvolvimento 
 ~~~shell
 poetry add sqlalchemy
 ~~~
-
-
 
 ~~~shell
 poetry add pydantic-settings
 ~~~
 
+Agora definiremos nosso modelo User. No diretório fast_zero, crie um novo arquivo chamado models.py e incluiremos o seguinte código no arquivo:
+
+~~~shell
+echo > fast_zero_v2/models.py
+~~~
+[...]
+
+## Testando as Tabelas
+Criaremos uma fixture para a conexão com o banco de dados chamada session no arquivo `tests/conftest.py`.
+[...]
+
+### Criando um Teste para a Nossa Tabela
+Agora, no arquivo test_db.py, escreveremos um teste para a criação de um usuário. Este teste adiciona um novo usuário ao banco de dados, faz commit das mudanças, e depois verifica se o usuário foi devidamente criado consultando-o pelo nome de usuário. Se o usuário foi criado corretamente, o teste passa. Caso contrário, o teste falha, indicando que há algo errado com nossa função de criação de usuário.
+
+~~~shell
+echo > tests/test_db.py
+~~~
+[...]
+
+#### Executando o teste
+
+~~~shell
+exit
+~~~
+
+~~~shell
+task format
+~~~
+
+~~~shell
+task test
+~~~
+
+O ideal é ter pelo menos dois terminais ativos, um para rodar a aplicação e outro para os testes e demais comandos.
+~~~shell
+task run
+~~~
+
+## Configuração do ambiente do banco de dados
+~~~shell
+echo > fast_zero_v2/settings.py
+~~~
+[...]
 
 Agora, definiremos o DATABASE_URL no nosso arquivo de ambiente .env. Crie o arquivo na raiz do projeto e adicione a seguinte linha:
+~~~shell
+echo > .env
+~~~
+[...]
 
-`DATABASE_URL="sqlite:///database.db"`
-
-Finalmente, adicione o arquivo de banco de dados, database.db, ao .gitignore para garantir que não seja incluído no controle de versão. Adicionar informações sensíveis ou arquivos binários ao controle de versão é geralmente considerado uma prática ruim.
 ~~~shell
 echo 'database.db' >> .gitignore
 ~~~
 
-
-Instalando o Alembic e Criando a Primeira Migração
+## Instalando o Alembic e Criando a Primeira Migração
 ~~~shell
 poetry add alembic
 ~~~
 
+Após a instalação do Alembic, precisamos iniciá-lo em nosso projeto. O comando de inicialização criará um diretório migrations e um arquivo de configuração alembic.ini:
 ~~~shell
 alembic init migrations
 ~~~
 
+### Criando uma migração automática
 Com o Alembic devidamente instalado e iniciado, agora é o momento de gerar nossa primeira migração. Mas, antes disso, precisamos garantir que o Alembic consiga acessar nossas configurações e modelos corretamente. Para isso, faremos algumas alterações no arquivo migrations/env.py.
 [...]
-
 
 Para criar a migração, utilizamos o seguinte comando:
 ~~~shell
 alembic revision --autogenerate -m "create users table"
 ~~~
 
+### Analisando a migração automática
+Vamos abrir e analisar o arquivo de migração `migrations/versions/f3577cecc9f1_create_users_table.py`.
 
-Vamos acessar o console do sqlite e verificar se isso foi feito. Precisamos chamar sqlite3 nome_do_arquivo.db:
+~~~shell
+code migrations/versions/f3577cecc9f1_create_users_table.py
+~~~
+
+Vamos acessar o console do sqlite e verificar se isso foi feito. Precisamos chamar sqlite3 nome_do_arquivo.db ou usar uma aplicativo que abre diversos tipos de banco de dados como o DBeaver:
 ~~~shell
 sqlite3 database.db
 ~~~
@@ -288,6 +446,39 @@ Para aplicar as migrações, usamos o comando upgrade do CLI Alembic. O argument
 alembic upgrade head
 ~~~
 [...]
+
+
+Agora, se examinarmos nosso banco de dados novamente:
+[...]
+
+## Commit
+Primeiro, verificaremos o status do nosso repositório para ver as mudanças que fizemos:
+~~~shell
+git status
+~~~
+
+~~~shell
+git add . 
+~~~
+
+![alt text](image.png)
+
+~~~shell
+git commit -m "Adicionada a primeira migração com Alembic. Criada tabela de usuários."
+~~~
+
+~~~shell
+git push
+~~~
+
+[🐍 ... VOLTAR DAQUI ...🐍]
+
+
+
+
+
+
+
 
 # Aula 05 Integrando Banco de Dados a API
 [...]
